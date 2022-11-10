@@ -1,17 +1,34 @@
 # Experiment with RefCell
 
-By using `RefCell` a function can decide if it needs to mutate
-the `this` parameter. This is not idiomatic Rust, but it does work.
+By using `RefCell` with `MaybeUninit` I'm trying to make it a
+little more idiomatic rust. In that you use s1.this.borrow().v1()
+instead of a S1::v1(&s1). But it doesn't always work :)
+
+Just playing around!
 
 # Run
 
+Fails debug builds:
 ```
 $ cargo run
-   Compiling exper-refcell v0.1.0 (/home/wink/prgs/rust/myrepos/exper-refcell)
-    Finished dev [unoptimized + debuginfo] target(s) in 0.13s
+    Finished dev [unoptimized + debuginfo] target(s) in 0.00s
      Running `target/debug/exper-refcell`
-s1.v1=1
+thread 'main' panicked at 'assertion failed: `(left == right)`
+  left: `1`,
+ right: `123`', src/main.rs:42:5
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 ```
+
+Succeeds release builds:
+```
+$ cargo run --release
+   Compiling exper-refcell v0.1.0 (/home/wink/prgs/rust/myrepos/exper-refcell)
+    Finished release [optimized] target(s) in 0.13s
+     Running `target/release/exper-refcell`
+```
+
+I'm guessing this has something to do with optimizations, but the
+assert_eq! in `fn new` "always" works so something definitely weird.
 
 ## License
 
