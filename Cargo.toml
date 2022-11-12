@@ -39,6 +39,8 @@ rpath = false
 
 [profile.my-dev]
 inherits = "dev"
+strip = true
 
 [profile.my-rel]
 inherits = "release"
+strip = true
