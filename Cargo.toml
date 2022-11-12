@@ -42,9 +42,11 @@ inherits = "dev"
 strip = true
 lto = true
 codegen-units = 1
+panic = "abort"
 
 [profile.my-rel]
 inherits = "release"
 strip = true
 lto = true
 codegen-units = 1
+panic = "abort"
