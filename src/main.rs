@@ -5,9 +5,9 @@ struct S1<'a> {
     v1: i32
 }
 
+#[allow(unused)]
 impl<'a> S1<'a> {
-
-    //#[inline(never)]
+    #[inline(never)]
     fn new() -> Self {
         let mut s1_uninit = MaybeUninit::<S1>::uninit();
         let s1_mut_ptr = s1_uninit.as_mut_ptr();
@@ -24,20 +24,21 @@ impl<'a> S1<'a> {
             s1_uninit.assume_init()
         };
 
-        //println!("new: s1_this_v1={} s1_v1={}", s1.this.borrow().v1, s1.v1);
-        assert_eq!(s1.this.borrow().v1(), s1.v1);
-
+        let v1 = s1.v1_via_this();
         s1
     }
 
-    fn v1(&self) -> i32 {
-        self.v1
+    #[inline(never)]
+    fn v1_via_this(&self) -> i32 {
+        let v1 = self.this.borrow().v1;
+        //println!("{self:p} {v1}");
+        println!("{v1}");
+        v1
     }
 }
 
-//#[inline(never)]
+#[inline(never)]
 fn main() {
     let s1 = S1::new();
-    //println!("main: s1_this_v1={} s1_v1={}", s1.this.borrow().v1, s1.v1);
-    assert_eq!(s1.this.borrow().v1(), s1.v1);
+    s1.v1_via_this();
 }
