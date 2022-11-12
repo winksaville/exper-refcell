@@ -1,0 +1,6 @@
+ls -lrth target/*/exper-refcell
+cargo clean
+cargo run --profile my-dev
+cargo run --profile my-rel
+ls -lrth target/*/exper-refcell
+

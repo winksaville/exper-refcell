@@ -1,5 +1,5 @@
 use core::panic;
-use std::{cell::RefCell, mem::MaybeUninit, ptr::addr_of_mut};
+use core::{cell::RefCell, mem::MaybeUninit, ptr::addr_of_mut};
 
 const V1_DEFAULT: i32 = 123;
 
