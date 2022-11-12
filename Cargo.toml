@@ -17,7 +17,7 @@ debug = true
 #split-debuginfo = '...'  # Platform-specific.
 debug-assertions = true
 overflow-checks = true
-lto = true
+lto = false
 panic = 'unwind'
 incremental = true
 codegen-units = 256
@@ -31,7 +31,7 @@ debug = false
 #split-debuginfo = '...'  # Platform-specific.
 debug-assertions = false
 overflow-checks = false
-lto = true
+lto = false
 panic = 'unwind'
 incremental = false
 codegen-units = 16
@@ -40,7 +40,11 @@ rpath = false
 [profile.my-dev]
 inherits = "dev"
 strip = true
+lto = true
+codegen-units = 1
 
 [profile.my-rel]
 inherits = "release"
 strip = true
+lto = true
+codegen-units = 1
