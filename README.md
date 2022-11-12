@@ -11,11 +11,10 @@ Just playing around!
 Fails debug builds:
 ```
 $ cargo run
-    Finished dev [unoptimized + debuginfo] target(s) in 0.00s
+   Compiling exper-refcell v0.1.0 (/home/wink/prgs/rust/myrepos/exper-refcell)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.13s
      Running `target/debug/exper-refcell`
-thread 'main' panicked at 'assertion failed: `(left == right)`
-  left: `1`,
- right: `123`', src/main.rs:42:5
+thread 'main' panicked at 'explicit panic', src/main.rs:53:5
 note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
 ```
 

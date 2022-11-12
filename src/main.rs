@@ -1,4 +1,7 @@
+use core::panic;
 use std::{cell::RefCell, mem::MaybeUninit, ptr::addr_of_mut};
+
+const V1_DEFAULT: i32 = 123;
 
 struct S1<'a> {
     this: RefCell<&'a Self>,
@@ -19,20 +22,23 @@ impl<'a> S1<'a> {
             let x = RefCell::new(s1p);
 
             addr_of_mut!((*s1_mut_ptr).this).write(x);
-            addr_of_mut!((*s1_mut_ptr).v1).write(123);
+            addr_of_mut!((*s1_mut_ptr).v1).write(V1_DEFAULT);
 
             s1_uninit.assume_init()
         };
 
         let v1 = s1.v1_via_this();
-        s1
+        if v1 == V1_DEFAULT {
+            return s1;
+        }
+        panic!();
     }
 
     #[inline(never)]
     fn v1_via_this(&self) -> i32 {
         let v1 = self.this.borrow().v1;
         //println!("{self:p} {v1}");
-        println!("{v1}");
+        //println!("{v1}");
         v1
     }
 }
@@ -40,5 +46,9 @@ impl<'a> S1<'a> {
 #[inline(never)]
 fn main() {
     let s1 = S1::new();
-    s1.v1_via_this();
+    let v1 = s1.v1_via_this();
+    if v1 == V1_DEFAULT {
+        return;
+    }
+    panic!();
 }
