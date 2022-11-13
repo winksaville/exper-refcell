@@ -41,15 +41,15 @@ rpath = false
 [profile.my-dev]
 inherits = "dev"
 strip = true
-lto = true
-codegen-units = 1
+lto = false
+codegen-units = 16
 panic = "abort"
 opt-level = 0
 
 [profile.my-rel]
 inherits = "release"
 strip = true
-lto = true
-codegen-units = 1
+lto = false
+codegen-units = 16
 panic = "abort"
-opt-level = 0
+opt-level = 1
