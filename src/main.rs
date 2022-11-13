@@ -1,10 +1,7 @@
+#![no_std]
 #![no_main]
 
-//extern crate libc;
-
-use std::fs::File;
-use std::io::Write;
-use std::os::unix::io::FromRawFd;
+extern crate libc;
 
 //use core::panic;
 use core::{cell::RefCell, mem::MaybeUninit, ptr::addr_of_mut};
@@ -51,24 +48,27 @@ impl<'a> S1<'a> {
 }
 
 #[inline(never)]
-fn stdout() -> File {
-    unsafe { File::from_raw_fd(1) }
-}
-
-#[inline(never)]
-fn print_buf(buf: &[u8]) {
-    let mut stdout = stdout();
-    stdout.write(buf).unwrap();
+fn printf_cstr(data: &'static str) {
+    unsafe {
+        libc::printf(data.as_ptr() as *const _);
+    }
 }
 
 #[inline(never)]
 #[no_mangle]
-pub fn main(_argc: i32, _argv: *const *const u8) {
+pub extern "C" fn main(_argc: isize, _argv: *const *const u8) -> isize {
     let s1 = S1::new();
     let v1 = s1.v1_via_this();
     if v1 == V1_DEFAULT {
-        print_buf(b"Success\n\0");
-        return
+        printf_cstr("Success\n\0");
+        return 0;
     }
-    print_buf(b"Failed\n\0");
+    printf_cstr("Failed\n\0");
+
+    1
+}
+
+#[panic_handler]
+fn my_panic(_info: &core::panic::PanicInfo) -> ! {
+    loop {}
 }
