@@ -1,4 +1,12 @@
-use core::panic;
+#![no_main]
+
+//extern crate libc;
+
+use std::fs::File;
+use std::io::Write;
+use std::os::unix::io::FromRawFd;
+
+//use core::panic;
 use core::{cell::RefCell, mem::MaybeUninit, ptr::addr_of_mut};
 
 const V1_DEFAULT: i32 = 123;
@@ -23,7 +31,6 @@ impl<'a> S1<'a> {
 
             addr_of_mut!((*s1_mut_ptr).this).write(x);
             addr_of_mut!((*s1_mut_ptr).v1).write(V1_DEFAULT);
-
             s1_uninit.assume_init()
         };
 
@@ -44,11 +51,24 @@ impl<'a> S1<'a> {
 }
 
 #[inline(never)]
-fn main() {
+fn stdout() -> File {
+    unsafe { File::from_raw_fd(1) }
+}
+
+#[inline(never)]
+fn print_buf(buf: &[u8]) {
+    let mut stdout = stdout();
+    stdout.write(buf).unwrap();
+}
+
+#[inline(never)]
+#[no_mangle]
+pub fn main(_argc: i32, _argv: *const *const u8) {
     let s1 = S1::new();
     let v1 = s1.v1_via_this();
     if v1 == V1_DEFAULT {
-        return;
+        print_buf(b"Success\n\0");
+        return
     }
-    panic!();
+    print_buf(b"Failed\n\0");
 }
