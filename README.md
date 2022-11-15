@@ -4,32 +4,31 @@ By using `RefCell` with `MaybeUninit` I'm trying to make it a
 little more idiomatic rust. In that you use s1.this.borrow().v1()
 instead of a S1::v1(&s1). But it doesn't always work :)
 
-Trying to track down why debug builds fail and release builds don't.
-Here I'll be using custom profiles 'my-dev' and 'my-rel' so as
-to control the build parameters.
-
 # Run
 
-Fails my-dev builds:
+Fails dev builds:
 ```
-$ cargo run --profile my-dev
+$ cargo run
    Compiling exper-refcell v0.1.0 (/home/wink/prgs/rust/myrepos/exper-refcell)
-    Finished my-dev [unoptimized + debuginfo] target(s) in 0.13s
-     Running `target/my-dev/exper-refcell`
-thread 'main' panicked at 'explicit panic', src/main.rs:53:5
-note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+      Finished dev [unoptimized + debuginfo] target(s) in 0.13s
+      Running `/home/wink/prgs/rust/myrepos/exper-refcell/target/debug/exper-refcell`
+s1: 0x7ffc17039928
+self: 0x7ffc17039928 v1: 123
+self: 0x7ffc17039928 v1: 386111784
+Failed
 ```
 
 Succeeds release builds:
 ```
-$ cargo run --profile my-rel
-   Compiling exper-refcell v0.1.0 (/home/wink/prgs/rust/myrepos/exper-refcell)
-    Finished my-rel [optimized] target(s) in 0.13s
-     Running `target/my-rel/exper-refcell`
+$ cargo run --release
+      Finished release [optimized] target(s) in 0.00s
+      Running `/home/wink/prgs/rust/myrepos/exper-refcell/target/release/exper-refcell`
+s1: 0x7ffca864e5c8
+self: 0x7ffca864e5c8 v1: 123
+self: 0x7ffca864e5c8 v1: 123
+Success
+Drop S1 0x7ffca864e5c8
 ```
-
-I'm guessing this has something to do with optimizations, but the
-assert_eq! in `fn new` "always" works so something definitely weird.
 
 ## License
 
