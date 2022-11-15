@@ -1,5 +1,5 @@
-use core::panic;
-use std::{cell::RefCell, mem::MaybeUninit, ptr::addr_of_mut};
+#![feature(new_uninit)]
+use core::{cell::RefCell, ptr::addr_of_mut};
 
 const V1_DEFAULT: i32 = 123;
 
@@ -17,8 +17,8 @@ impl<'a> Drop for S1<'a> {
 #[allow(unused)]
 impl<'a> S1<'a> {
     #[inline(never)]
-    fn new() -> Self {
-        let mut s1_uninit = MaybeUninit::<S1>::uninit();
+    fn new() -> Box<Self> {
+        let mut s1_uninit = Box::<S1>::new_uninit();
         let s1_mut_ptr = s1_uninit.as_mut_ptr();
 
         let s1 = unsafe {

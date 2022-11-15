@@ -6,28 +6,27 @@ instead of a S1::v1(&s1). But it doesn't always work :)
 
 # Run
 
-Fails dev builds:
+Works for both dev and release builds:
 ```
 $ cargo run
    Compiling exper-refcell v0.1.0 (/home/wink/prgs/rust/myrepos/exper-refcell)
-      Finished dev [unoptimized + debuginfo] target(s) in 0.13s
-      Running `/home/wink/prgs/rust/myrepos/exper-refcell/target/debug/exper-refcell`
-s1: 0x7ffc17039928
-self: 0x7ffc17039928 v1: 123
-self: 0x7ffc17039928 v1: 386111784
-Failed
-```
-
-Succeeds release builds:
-```
-$ cargo run --release
-      Finished release [optimized] target(s) in 0.00s
-      Running `/home/wink/prgs/rust/myrepos/exper-refcell/target/release/exper-refcell`
-s1: 0x7ffca864e5c8
-self: 0x7ffca864e5c8 v1: 123
-self: 0x7ffca864e5c8 v1: 123
+    Finished dev [unoptimized + debuginfo] target(s) in 0.13s
+     Running `/home/wink/prgs/rust/myrepos/exper-refcell/target/debug/exper-refcell`
+s1: 0x7ffe4b4b38f8
+self: 0x5589ad5bbba0 v1: 123
+self: 0x5589ad5bbba0 v1: 123
 Success
-Drop S1 0x7ffca864e5c8
+Drop S1 0x5589ad5bbba0
+
+$ cargo run --release
+   Compiling exper-refcell v0.1.0 (/home/wink/prgs/rust/myrepos/exper-refcell)
+    Finished release [optimized] target(s) in 0.14s
+     Running `/home/wink/prgs/rust/myrepos/exper-refcell/target/release/exper-refcell`
+s1: 0x7ffec14d9950
+self: 0x55df45479ba0 v1: 123
+self: 0x55df45479ba0 v1: 123
+Success
+Drop S1 0x55df45479ba0
 ```
 
 ## License
