@@ -6,61 +6,63 @@ I've also `impl Display for S1` which displays the address
 of S1, &S1::this, S1::this, &S1::v1, S1::v1, sc (strong_counter)
 and wc (weak_counter).
 
+This additionally shows creating multiple S1's with mutable (this, v1)
+and immutable fields (name).
+
 # Run
 
 Run dev
 ```
 $ cargo run
    Compiling exper-refcell v0.1.0 (/home/wink/prgs/rust/myrepos/exper-refcell)
-    Finished dev [unoptimized + debuginfo] target(s) in 0.14s
+    Finished dev [unoptimized + debuginfo] target(s) in 0.31s
      Running `target/debug/exper-refcell`
-offset_of S1.this 0
-offset_of S1.v1 16
-new:- 0x7ffe56111518 S1 { &this=0x7ffe56111518 this=None &v1=0x7ffe56111528 v1=123 }
-main:+ &owner_s1=0x7ffe56111510 owner_s1=0x564a2722faf0 S1 { &this=0x564a2722faf0 this=None &v1=0x564a2722fb00 v1=123 }
-main:  initialize owner_s1: 0x564a2722faf0 S1 { &this=0x564a2722faf0 this=0x564a2722faf0 &v1=0x564a2722fb00 v1=123 sc=1 wc=1 }
-main:  create    owner2_s1: 0x564a2722faf0 S1 { &this=0x564a2722faf0 this=0x564a2722faf0 &v1=0x564a2722fb00 v1=123 sc=2 wc=1 }
-main:  owner_s1.v1_via_this=123
-main:- owner_s1: 0x564a2722faf0 S1 { &this=0x564a2722faf0 this=0x564a2722faf0 &v1=0x564a2722fb00 v1=123 sc=2 wc=1 }
-Drop S1 0x564a2722faf0 S1 { &this=0x564a2722faf0 this=0x564a2722faf0 &v1=0x564a2722fb00 v1=123 sc=0 wc=0 }
+main:+
+offset_of S1.name 0
+offset_of S1.other 24
+offset_of S1.v1 40
+create_two:+
+new:- first: 0x7ffc04103908 S1 { &other=0x7ffc04103920 other=None &v1=0x7ffc04103930 v1=123 }
+new:- second: 0x7ffc04103948 S1 { &other=0x7ffc04103960 other=None &v1=0x7ffc04103970 v1=123 }
+create_two:  first: 0x5572b096ebd0 S1 { &other=0x5572b096ebe8 other=0x5572b096ec40 &v1=0x5572b096ebf8 v1=123 sc=1 wc=1 }
+create_two:  second: 0x5572b096ec40 S1 { &other=0x5572b096ec58 other=0x5572b096ebd0 &v1=0x5572b096ec68 v1=123 sc=1 wc=1 }
+create_two:-
+main:  &first =0x7ffc04103dc8  first=first: 0x5572b096ebd0 S1 { &other=0x5572b096ebe8 other=0x5572b096ec40 &v1=0x5572b096ebf8 v1=123 sc=1 wc=1 }
+main:  &second=0x7ffc04103dd0 second=second: 0x5572b096ec40 S1 { &other=0x5572b096ec58 other=0x5572b096ebd0 &v1=0x5572b096ec68 v1=123 sc=1 wc=1 }
+ first.v1=124
+second.v1=125
+ first.v1_via_other().v1()=125
+       second.other().v1()=124
+main:-
+Drop S1 second: 0x5572b096ec40 S1 { &other=0x5572b096ec58 other=0x5572b096ebd0 &v1=0x5572b096ec68 v1=125 sc=1 wc=1 }
+Drop S1 first: 0x5572b096ebd0 S1 { &other=0x5572b096ebe8 other=0x5572b096ec40 &v1=0x5572b096ebf8 v1=124 sc=0 wc=0 }
 ```
-
-With `struct S1` defined as:
-```
-struct S1 {
-    this: RefCell<Option<Weak<Self>>>,
-    v1: i32,
-}
-```
-
-Then from the above output the following is true:
-  * "new:- .." shows that in `new()` `S1` created on the stack at `0x7ffe56111518`
-  * "main:+ &ow.." `&owner_s1=0x7ffe56111510` shows that `owner_s1` is on the stack
-  * "main:+ &ow.." `owner_s1=0x564a2722faf0 S1` shows that the owner_s1 data is on the heap
-  * "main:  init.." `&this=0x564a2722faf0` this is at offset 0, i.e. equals `0x564a2722faf0 + 0x00`
-  * "main:  init.." `this=0x564a2722faf0` points at itself, i.e. `owner_s1=0x564a2722faf0 S1`
-  * "main:  init.." `&v1=0x564a2722fb00` v1 is at offset 16, i.e. equals `0x564a2722faf0 + 0x10`
-  * "main:  init.." `v1=123` is `V1_DEFAULT`
-  * "main:  init.." `sc=1` is strong_count
-  * "main:  init.." `wc=1` is weak_count
-  * "main:  crea.." `sc=2` strong_count was incremented all other values same as "main:  init.."
-
 
 Here is the release run
 ```
 $ cargo run --release
    Compiling exper-refcell v0.1.0 (/home/wink/prgs/rust/myrepos/exper-refcell)
-    Finished release [optimized] target(s) in 0.16s
+    Finished release [optimized] target(s) in 0.18s
      Running `target/release/exper-refcell`
-offset_of S1.this 0
-offset_of S1.v1 16
-new:- 0x7ffdea466740 S1 { &this=0x7ffdea466740 this=None &v1=0x7ffdea466750 v1=123 }
-main:+ &owner_s1=0x7ffdea4666f8 owner_s1=0x55a1fbe22af0 S1 { &this=0x55a1fbe22af0 this=None &v1=0x55a1fbe22b00 v1=123 }
-main:  initialize owner_s1: 0x55a1fbe22af0 S1 { &this=0x55a1fbe22af0 this=0x55a1fbe22af0 &v1=0x55a1fbe22b00 v1=123 sc=1 wc=1 }
-main:  create    owner2_s1: 0x55a1fbe22af0 S1 { &this=0x55a1fbe22af0 this=0x55a1fbe22af0 &v1=0x55a1fbe22b00 v1=123 sc=2 wc=1 }
-main:  owner_s1.v1_via_this=123
-main:- owner_s1: 0x55a1fbe22af0 S1 { &this=0x55a1fbe22af0 this=0x55a1fbe22af0 &v1=0x55a1fbe22b00 v1=123 sc=2 wc=1 }
-Drop S1 0x55a1fbe22af0 S1 { &this=0x55a1fbe22af0 this=0x55a1fbe22af0 &v1=0x55a1fbe22b00 v1=123 sc=0 wc=0 }
+main:+
+offset_of S1.name 0
+offset_of S1.other 24
+offset_of S1.v1 40
+create_two:+
+new:- first: 0x7ffc6a551b50 S1 { &other=0x7ffc6a551b68 other=None &v1=0x7ffc6a551b78 v1=123 }
+new:- second: 0x7ffc6a551b50 S1 { &other=0x7ffc6a551b68 other=None &v1=0x7ffc6a551b78 v1=123 }
+create_two:  first: 0x559c6fa53bd0 S1 { &other=0x559c6fa53be8 other=0x559c6fa53c40 &v1=0x559c6fa53bf8 v1=123 sc=1 wc=1 }
+create_two:  second: 0x559c6fa53c40 S1 { &other=0x559c6fa53c58 other=0x559c6fa53bd0 &v1=0x559c6fa53c68 v1=123 sc=1 wc=1 }
+create_two:-
+main:  &first =0x7ffc6a551bf8  first=first: 0x559c6fa53bd0 S1 { &other=0x559c6fa53be8 other=0x559c6fa53c40 &v1=0x559c6fa53bf8 v1=123 sc=1 wc=1 }
+main:  &second=0x7ffc6a551c00 second=second: 0x559c6fa53c40 S1 { &other=0x559c6fa53c58 other=0x559c6fa53bd0 &v1=0x559c6fa53c68 v1=123 sc=1 wc=1 }
+ first.v1=124
+second.v1=125
+ first.v1_via_other().v1()=125
+       second.other().v1()=124
+main:-
+Drop S1 second: 0x559c6fa53c40 S1 { &other=0x559c6fa53c58 other=0x559c6fa53bd0 &v1=0x559c6fa53c68 v1=125 sc=1 wc=1 }
+Drop S1 first: 0x559c6fa53bd0 S1 { &other=0x559c6fa53be8 other=0x559c6fa53c40 &v1=0x559c6fa53bf8 v1=124 sc=0 wc=0 }
 ```
 
 ## License

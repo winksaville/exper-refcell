@@ -9,29 +9,34 @@ use memoffset::offset_of;
 const V1_DEFAULT: i32 = 123;
 
 struct S1 {
-    this: RefCell<Option<Weak<Self>>>,
-    v1: i32,
+    name: String,
+    other: RefCell<Option<Weak<Self>>>,
+    v1: RefCell<i32>,
 }
 
 impl Display for S1 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let binding = self.this.borrow();
+        let binding = self.other.borrow();
         if let Some(binding_as_ref) = binding.as_ref() {
             write!(
                 f,
-                "{self:p} S1 {{ &this={:p} this={:p} &v1={:p} v1={} sc={} wc={} }}",
-                &self.this,
+                "{}: {self:p} S1 {{ &other={:p} other={:p} &v1={:p} v1={} sc={} wc={} }}",
+                self.name,
+                &self.other,
                 (*binding_as_ref).as_ptr(),
                 &self.v1,
-                self.v1,
+                self.v1.borrow(),
                 Weak::strong_count(binding_as_ref),
                 Weak::weak_count(binding_as_ref)
             )
         } else {
             write!(
                 f,
-                "{self:p} S1 {{ &this={:p} this=None &v1={:p} v1={} }}",
-                &self.this, &self.v1, self.v1
+                "{}: {self:p} S1 {{ &other={:p} other=None &v1={:p} v1={} }}",
+                self.name,
+                &self.other,
+                &self.v1,
+                self.v1.borrow()
             )
         }
     }
@@ -46,68 +51,87 @@ impl Drop for S1 {
 #[allow(unused)]
 impl S1 {
     #[inline(never)]
-    fn new() -> Self {
+    fn new(name: &str) -> Self {
         let s1 = Self {
-            this: RefCell::new(None),
-            v1: V1_DEFAULT,
+            name: name.to_owned(),
+            other: RefCell::new(None),
+            v1: RefCell::new(V1_DEFAULT),
         };
         println!("new:- {s1}");
 
         s1
     }
 
-    fn add(&mut self, val: i32) {
-        self.v1 += val;
+    #[inline(never)]
+    fn add(&self, val: i32) {
+        *self.v1.borrow_mut() += val;
     }
 
     #[inline(never)]
-    fn v1_via_this(&self) -> i32 {
-        //println!("v1_via_this:+ self={self}");
-        let binding = self.this.borrow();
-        let v1 = match binding.as_ref() {
+    fn v1(&self) -> i32 {
+        *self.v1.borrow()
+    }
+
+    #[inline(never)]
+    fn other(&self) -> &Self {
+        let binding = self.other.borrow();
+        let other: &Self = match binding.as_ref() {
             Some(binding_as_ref) => {
                 let s1_ptr = Weak::clone(binding_as_ref).as_ptr();
-                unsafe { (*s1_ptr).v1 }
+                unsafe { &*s1_ptr }
             }
             None => {
-                println!("v1_via_this:  this is None");
+                println!("other:  other is None");
                 panic!();
             }
         };
 
-        //println!("v1_via_this:- v1={v1}");
-        v1
+        other
+    }
+
+    #[inline(never)]
+    fn v1_via_other(&self) -> i32 {
+        self.other().v1()
     }
 }
 
 #[inline(never)]
-fn main() {
-    //println!("size_of S1={}", size_of::<S1>());
-    //println!(
-    //    "size_of RefCell<Option<Weak<S1>>>={}",
-    //    size_of::<RefCell<Option<Weak<S1>>>>()
-    //);
-    //println!("size_of i32={}", size_of::<i32>());
-    //assert!(size_of::<S1>() >= size_of::<RefCell<Option<Weak<S1>>>>() + size_of::<i32>());
+fn create_two_rcs1() -> (Rc<S1>, Rc<S1>) {
+    println!("create_two:+");
 
-    println!("offset_of S1.this {}", offset_of!(S1, this));
+    // Create first and second
+    let first: Rc<S1> = Rc::new(S1::new("first"));
+    let second: Rc<S1> = Rc::new(S1::new("second"));
+
+    // Connect them
+    *first.other.borrow_mut() = Some(Rc::downgrade(&second));
+    println!("create_two:  {first}");
+    *second.other.borrow_mut() = Some(Rc::downgrade(&first));
+    println!("create_two:  {second}");
+
+    println!("create_two:-");
+    (first, second)
+}
+
+#[inline(never)]
+fn main() {
+    println!("main:+");
+
+    println!("offset_of S1.name {}", offset_of!(S1, name));
+    println!("offset_of S1.other {}", offset_of!(S1, other));
     println!("offset_of S1.v1 {}", offset_of!(S1, v1));
 
-    // Allocate owner_s1
-    let owner_s1: Rc<S1> = Rc::new(S1::new());
-    println!("main:+ &owner_s1={:p} owner_s1={owner_s1}", &owner_s1);
+    let (first, second) = create_two_rcs1();
+    println!("main:  &first ={:p}  first={first}", &first);
+    println!("main:  &second={:p} second={second}", &second);
 
-    // Initialize owner_s1.this
-    *owner_s1.this.borrow_mut() = Some(Rc::downgrade(&owner_s1));
-    println!("main:  initialize owner_s1: {owner_s1}");
+    first.add(1);
+    println!(" first.v1={}", first.v1());
+    second.add(2);
+    println!("second.v1={}", second.v1());
 
-    // Create a second strong reference
-    let owner2_s1 = Rc::clone(&owner_s1);
-    println!("main:  create    owner2_s1: {owner2_s1}");
+    println!(" first.v1_via_other().v1()={}", first.v1_via_other());
+    println!("       second.other().v1()={}", second.other().v1());
 
-    // Invoke method v1_via_this
-    println!("main:  owner_s1.v1_via_this={}", owner_s1.v1_via_this());
-
-    // Invoke method p
-    println!("main:- owner_s1: {owner_s1}");
+    println!("main:-");
 }
