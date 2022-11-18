@@ -93,6 +93,11 @@ impl S1 {
     fn v1_via_other(&self) -> i32 {
         self.other().v1()
     }
+
+    #[inline(never)]
+    fn add_via_other(&self, val: i32) {
+        self.other().add(val);
+    }
 }
 
 #[inline(never)]
@@ -123,15 +128,20 @@ fn main() {
 
     let (first, second) = create_two_rcs1();
     println!("main:  &first ={:p}  first={first}", &first);
-    println!("main:  &second={:p} second={second}", &second);
+    println!("main:  &first={:p} second={second}", &second);
 
     first.add(1);
     println!(" first.v1={}", first.v1());
-    second.add(2);
+    second.add(101);
     println!("second.v1={}", second.v1());
 
-    println!(" first.v1_via_other().v1()={}", first.v1_via_other());
-    println!("       second.other().v1()={}", second.other().v1());
+    println!(" first.v1_via_other().v1()={} before add_via_other", first.v1_via_other());
+    first.add_via_other(1);
+    println!(" first.v1_via_other().v1()={} after add_via_other", first.v1_via_other());
+
+    println!(" second.v1_via_other().v1()={} before add_via_other", second.v1_via_other());
+    second.add_via_other(1);
+    println!(" second.v1_via_other().v1()={} after add_via_other", second.v1_via_other());
 
     println!("main:-");
 }
